@@ -7,6 +7,7 @@
 %\usepackage{booktabs} % For formal tables
 
 \usepackage{graphicx}
+\usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{mathtools}
 \usepackage{amsmath}
@@ -17,6 +18,11 @@
 \usepackage{numprint}
 \usepackage{listings}
 \usepackage{tabu}
+\usepackage{array}
+
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+
 % commented out by Roberto: we should stick to the ACM template
 %\usepackage{biblatex}
 
@@ -439,7 +445,7 @@ For example, SUIF \cite{Wilson:1994:SIR:193209.193217} uses a simple heuristic b
 \quad In order to achieve the best ML performance our features and the exact parameters of methodology have been iteratively tuned and refined with the help of K-fold CV. Predictive \textit{accuracy}, \textit{recall} and \textit{precision} scores were used as selection criteria. To get the most accurate and honest assessment of our ML models we kept the testing data hidden and used only the training data during all ML pipeline stages. Following subsections present the final results rather than the path towards them.
 \subsection{Overview}
 \label{ml_overview}
-\quad The machine learning (ML) task we solve in our project can be presented as \textbf{supervised ML classification problem}: \textit{create an ML model and train it to classify loops of Seoul National University implementation \cite{snu-npb-benchmarks} of NAS Parallel Benchmarks \cite{nasa-parallel-benchmarks} as parallelizable or not.}\newline\null 
+\quad The machine learning (ML) task we solve in our project can be presented as \textbf{supervised ML classification problem}: \textit{create an ML based model of loop parallelisability and train it to classify loops of Seoul National University implementation \cite{snu-npb-benchmarks} of NAS Parallel Benchmarks \cite{nasa-parallel-benchmarks} as parallelizable or not.}\newline\null 
 \quad We used facilities of \textit{scikit-learn} \cite{scikit-learn} Python library for all ML related tasks. To conduct various ML training/testing experiments in the search of the best ML model faster and easier we developed a Python scripting framework based on the scikit-learn library taking an input data (train and test) along with an ML pipeline INI configuration file. Configuration file allows us for a flexible change in the settings of an experiment (ML model to use, its hyper-parameter search space, the exact automatic feature selection methods, etc.). The following sections give a detailed description of all ML pipeline stages.
 \subsection{Loop Analysis \& Features}
 \label{loop_analysis_and_features}
@@ -459,6 +465,7 @@ We dump PDGs in a dot format and systematically use these visualisations in our 
 \quad The feature engineering process has been conducted iteratively and has been guided by the change in ML models predictive performance with the addition of one feature or the other. This process involved several methods. First, we tried to capture in our features the differences between PDG visualizations for parallel and non-parallel loops. Then we studied the source code of SNU NPB benchmarks along with ICC optimization reports and tried to understand why ICC failed to parallelize some of SNU NPB loops and transfer those insights into reflective features.\newline\null
 \quad We ended up with a set of 74 static loop features, which are based on the structural properties of PDG and the types of instructions constituting them. Table \ref{tab:loop_features} summarizes the main groups of devised features.\newline\null
 \quad Many of our features have a simple and intuitive motivations behind them. Loop proportion related features are backed up by the the fact, that bigger loops are harder to parallelize. Big iterators contain complex cross-iteration transitions (e.g linked-list update), unknown iteration numbers, etc. Critical SCCs limit loop parallelization further. Cohesion features do not have an apparent intuition. They characterise how tightly components of loops are coupled together in terms of the number of edges between them. Loop dependencies number features count the number of edges in different loop parts as well as their types. Loop instructions nature characterise the types of loop instructions, assigning more importance to memory reads/writes, calls, branches. Uninlined funtion calls usually prevent loop parallelization. Intensive memory work (memory read/write fraction features) complicates parallelization as well.   
+\begin{comment}
 \begin{table*}[h!]
     \centering
     \begin{tabular}[c]{|p{2.5cm}|p{4.0cm}|p{9.0cm}|}
@@ -473,13 +480,34 @@ We dump PDGs in a dot format and systematically use these visualisations in our 
         \hline
         \multirow{2}{2.5cm}{Loop Cohesion} & Iterator/Payload & $\frac{Num of Edges Between Iterator/Payload}{Total Loop Edges Num}$\\\cline{2-3}
         & Critical/Regular Payload & $\frac{Num of Edges Between Critical/Regular Payload}{Total Loop Payload Edges Num}$\\
-        \hline      
+        \hline
         Loop Nature & \multicolumn{2}{|p{13.0cm}|}{The number of different kinds of critical to loop parallelisability instructions (memory reads/writes, calls, branches, etc.). These numbers are computed for different loop parts (iterator, payload, critical payload)} \\
         \hline
     \end{tabular}
     \caption{The set of static code features devised to capture loop parallelisability property.}
     \label{tab:loop_features}
 \end{table*}
+\end{comment}
+\begin{table*}[!h]
+  \begin{minipage}{\linewidth}
+  \begin{center}
+    \begin{tabu}{M{3cm}M{5cm}M{8cm}}
+      \hline
+      \rowfont{\bfseries}
+      Feature groups & Features & Description\\\hline
+      \multirow{3}{*}{Loop Proportions} & Absolute Size & the number of LLVM IR instructions\\%\hline
+      & Payload Fraction & $\frac{payload instructions number}{whole loop instructions number}$\\%\hline
+      & Proper SCCs Number & number of payload SCCs with more than 1 instruction\\\hline
+      Loop Dependencies & \multicolumn{2}{M{13cm}}{The number of PDG edges corresponding to different dependence classes: read/write order (\textbf{True}, \textbf{Anti}, \textbf{Output}), dependency media (\textbf{Register}, \textbf{Memory}, \textbf{Control}), other (\textbf{Confused}, \textbf{Cross-Iteration})}\\\hline
+      \multirow{2}{*}{Loop Cohesion} & Iterator/Payload & $\frac{Num of Edges Between Iterator/Payload}{Total Loop Edges Num}$\\
+        & Critical/Regular Payload & $\frac{Num of Edges Between Critical/Regular Payload}{Total Loop Payload Edges Num}$\\
+        \hline
+      \end{tabu}
+  \end{center}
+  \end{minipage}
+  \caption{The set of static code features devised to capture loop parallelisability property.}
+  \label{tab:loop_features}
+\end{table*}%
 \subsection{Feature Extraction}
 \label{feature_extraction}
 \quad To extract all devised loop features from SNU NPB benchmarks we developed \textbf{PParMetrics (Pervasive Parallelism Metrics)} tool, based on the LLVM compiler infrastructure \cite{llvm-compiler-infrastructure}\cite{Lattner:2004:LCF:977395.977673}. The tool is basically a set of LLVM function passes working on the SSA-based LLVM IR and can be found on the GitHub \cite{github-ppar-tool}.\newline\null
@@ -745,7 +773,7 @@ We have 10 SNU NAS benchmarks. We choose one of them and run the oracle training
 \subsection{LOOCV SNU NAS Performance}
 \label{evaluation_loocv}
 \quad While k-fold cross-validation method mixes loops from all 10 SNU NPB benchmarks and provides a good statistical assessment of predictive performance on the whole SNU NPB data set generally, in order to use our predictor with the proposed schemes we need to change our methodology. For that purpose we use modified Leave-One-Out cross-validation (LOOCV) technique. We train our model on 9 benchmarks and test it on the remaining one. Doing so allows us to actually parallelise all correctly predicted parallel loops and get performance numbers for the benchmark being tested.
-
+\begin{comment}
 \begin{table*}[t!]
     \centering
     \begin{tabular}[c]{|p{1.5cm}|p{1.0cm}|p{1.5cm}|p{1.3cm}|p{1.0cm}|p{1.5cm}|p{1.3cm}|p{1.0cm}|p{1.5cm}|p{1.3cm}|}
@@ -778,6 +806,34 @@ We have 10 SNU NAS benchmarks. We choose one of them and run the oracle training
     \caption{Predictive performance on different for different ML models measured with a k-fold CV method on the whole set of 1415 SNU NPB loops.}
     \label{tab:average_accuracy}
 \end{table*}
+\end{comment}
+
+\begin{table*}
+  \begin{minipage}{\textwidth}
+  \begin{center}
+    \begin{tabu}{c|ccc|ccc|ccc}
+      \hline
+      \rowfont{\bfseries}
+      Benchmark & \multicolumn{3}{c}{Average Per Model} \vline & \multicolumn{3}{c}{Most Frequent} \vline & \multicolumn{3}{c}{Uniform}\\\hline
+      \rowfont{\bfseries}
+      Accuracy & Recall & Precision & Accuracy & Recall & Precision & Accuracy & Recall	& Precision & Accuracy\\\hline
+      BT & 85.7 & 92.6 & 90.0 & 78.4 & 100.0 & 78.4 & 51.9 & 48.3 & 83.3 \\
+      CG & 74.2 & 72.4 & 85.7	& 64.4 & 100.0 & 64.4 & 46.7 & 37.9 & 64.7 \\
+      DC & 72.8 & 71.0 & 51.5	& 29.0 & 100.0 & 29.0 & 55.0 & 37.9 & 28.9 \\
+      EP & 92.0 &	86.6 & 100.0 & 60.0 & 100.0 & 60.0 & 40.0 & 33.3 & 50.0 \\
+      FT & 56.5 &	37.9 & 84.4	& 63.0 & 100.0 & 63.0 & 43.5 & 34.5	& 58.8 \\
+      IS & 74.0 &	97.5 & 61.3	& 40.0 & 100.0 & 40.0 &	45.0 & 37.5	& 33.3 \\
+      LU & 90.1 &	90.7 & 96.3	& 78.0 & 100.0 & 78.0 & 46.1 & 45.0	& 76.1 \\
+      MG & 64.9 &	87.6 & 57.8	& 45.7 & 100.0 & 45.7 &	43.2 & 32.4	& 36.4 \\
+      SP & 88.8 &	94.7 & 92.2	& 83.4 & 100.0 & 83.4 &	46.6 & 46.4	& 81.7 \\
+      UA & 75.9 &	83.8 & 83.9	& 72.9 & 100.0 & 72.9 &	48.4 & 47.2	& 72.5 \\\hline
+      \end{tabu}
+  \end{center}
+  \end{minipage}
+  \caption{Average predictive performance for different ML models measured with a K-fold CV method on the whole set of 1415 SNU NPB loops.} 
+  \label{tab:average_accuracy}
+\end{table*}%
+
 
 \begin{figure}[h]
 \includegraphics[width=0.5\textwidth]{figures/LOOCV_accuracy.pdf}
@@ -807,6 +863,7 @@ Top left and right pictures are identical and rank benchmark loops according to 
 \label{fig:icc_competition_scheme}
 \end{figure}
 \quad There is another important property implicitly living in our assistant. In its static analysis Intel \cpp{} Compiler has to be conservative and misses some parallelization opportunities: if it cannot prove that there are no parallelization prohibiting dependencies in the loop, then we cannot parallelize it, even if the loop is actually parallelizable.
+\begin{comment}
 \begin{table}[h]
     \centering
     \begin{tabular}[c]{|p{1.0cm}|p{1.5cm}|p{1.5cm}|p{2cm}|}
@@ -833,6 +890,29 @@ Top left and right pictures are identical and rank benchmark loops according to 
     \caption{All the possible ICC competition scheme combinations}
     \label{tab:combinations_table}
 \end{table}
+\end{comment}
+\begin{table}
+  \begin{minipage}{\columnwidth}
+  \begin{center}
+    \begin{tabu}{M{0.5cm}M{1.2cm}M{2.0cm}M{3.5cm}}
+      \hline
+      \rowfont{\bfseries}
+      ICC & Predictor & True Parallel & Classification Bucket\\%\hline
+      \hline
+      0 & 0 & 0 & correct 0 (no) prediction\\
+      0 & 0 & 1 & missed opportunity\\
+      0 & 1 & 0 & false positive\\
+      0 & 1 & 1 & discovery\\
+      1 & 0 & 0 & impossible\\
+      1 & 0 & 1 & icc shielding\\
+      1 & 1 & 0 & impossible\\
+      1 & 1 & 1 & correct 1 (yes) prediction\\\hline  
+    \end{tabu}
+  \end{center}
+  \end{minipage}
+  \caption{All the possible ICC competition scheme combinations.}
+  \label{tab:combinations_table}
+\end{table}%
 Having learnt loop parallelizability property better than ICC, our ML model can predict those loops as parallelizable, thus extending ICC parallelizm discovery capabilities. The visible effect of this is that our assistant gives high parallelizability probabilities to those loops and thus moves them toward the beginning of the ranking, despite the fact that ICC refused to parallelize them at all. We name such cases as "discovery".\newline\null
 \quad To better illustrate the property described above we conduct the following experiment. We put our predictor in the same harness with the ICC and assign the former a supplementary role to perform.\newline\null
 \quad Figure \ref{fig:icc_competition_scheme} demonstrates the setting of the experiment. The two components (ICC and predictor) independently classify loops as parallelizable or not. There are a total of 6 possible classification outcomes our schem might potentially produce. Table \ref{tab:combinations_table} summarizes them. The most interesting cases here are the cases, when predictor disagrees with ICC. If predictor says "yes, parallelisible" and ICC compiler says the opposite we might either discover a new parallelisation opportunity (case 011), or make a critical false positive mispredicton (case 010). In the 101 case ICC compiler "shields" ML predictor from making a false negative misprediction and losing performance. When feedback components agree with each other we do not gain anything over single ICC scheme. They might both say "no" to a truly parallelisible loop and thus miss some opportunities.  
