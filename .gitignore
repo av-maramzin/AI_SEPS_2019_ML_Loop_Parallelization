@@ -4,4 +4,7 @@
 *.out
 *.bbl
 *.blg
+*.fls
+*.fdb_latexmk
+*.brf
 main.pdf
