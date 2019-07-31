@@ -208,10 +208,10 @@ parallelization in the near future~\cite{Larsen:2012:PML:2410141.2410600}.
 
 % solution: parallelisation assistant
 
-This paper introduces a novel parallelization assistant that aids the programmer in the process of parallelizing a program in the frequent case where automatic approaches fail to do so.
+This paper introduces a novel parallelization assistant that aids a programmer in the process of parallelizing a program in the frequent case where automatic approaches fail to do so.
 %
-The assistant reduces the manual effort in this process by presenting the
-programmer a ranking of the program loops that are most likely to 1) require little or no effort for successful parallelization and 2) improve the program's performance when parallelized.
+The assistant reduces the manual effort in this process by presenting a
+programmer with a ranking of program loops that are most likely to 1) require little or no effort for successful parallelization and 2) improve the program's performance when parallelized.
 %
 Thus, it improves over the traditional, profile-guided process by also taking into account how \textit{likely} it is that each of the profiled loops can be parallelized.
 
@@ -243,7 +243,7 @@ support vector machines allows the model to achieve a prediction accuracy higher
 %
 % Note: the "detected parallelism increase" is 945/995 - 812/995 = 0.1336683417.
 %
-The model improves over ICC across the sequential C version of the SNU NAS benchmark suite by detecting 13\% more parallel loops. Albeit this improvement comes at the cost of introducing \textit{false positives}, where non-parallelizable loops are misclassified as parallelizable. However, the false positive rate in our evaluation is as low as 6.5\%. We feel this is acceptable as our parallelization assistant does not automatically restructure code, but the final parallelization is in the hands of the expert users. 
+The model improves over ICC across the sequential C version of the SNU NAS benchmark suite by detecting 13\% more parallel loops. Albeit this improvement comes at the cost of introducing \textit{false positives}, where non-parallelizable loops are misclassified as parallelizable. However, the false positive rate in our evaluation is as low as 6.5\%. We feel this is acceptable as our parallelization assistant does not automatically restructure code, but the final parallelization is in the hands of expert users.
 %\todo{(FIXME: taken from~Figure~\ref{fig:accuracy_loocv}, double-check these numbers)}
 
 % TODO: mention that we use standard techniques for feature extraction,
@@ -313,7 +313,7 @@ Finally, manual analysis of loop \texttt{cg.c:509} (see
 Listing~\ref{lst:reduction}) recognizes that it computes an array of reductions
 and thus it is parallelizable.
 %
-Just parallelizing this loop speeds up CG by a factor of 2.8, which is 80\% of
+Parallelizing just this loop speeds up CG by a factor of 2.8, which is 80\% of
 the speedup obtained by an expert parallelizing the entire benchmark.
 
 In contrast, our parallelization assistant (two last columns in
@@ -661,7 +661,7 @@ For training our ML model we use a total of 1415 loops from the SNU NPB benchmar
 
 \section{ML Predictive Performance}\label{ml_predictive_performance}
 
-We employ two cross-validation (CV) techniques. We evaluate the predictive performance of our trained ML model using K-fold CV. To deploy the model withing our assistant scheme we have to use a modified Leave-One-Out CV.
+We employ two cross-validation (CV) techniques. We evaluate the predictive performance of our trained ML model using K-fold CV. To deploy the model within our assistant scheme we have to use a modified Leave-One-Out CV.
 
 %\quad This section reports on the predictive performance of ML based loop parallelisability model described in the previous section. As has already been described, before we conduct our performance assessment experiments, we have tuned all the parameters of our train/test methodology with the help of K-fold CV and show only the final results.    
 %\begin{comment}
@@ -733,7 +733,7 @@ The SVC model has the highest average accuracy and has successfully managed to r
 \end{figure}
 \subsection{Leave-One-Out Cross-Validation}
 \label{evaluation_loocv}
-Next, we train and test our models using a modified Leave-One-Out Cross-Validation (LOOCV). Instead of treating the entire set of loops from all benchmarks as a single data set, we now train our model on 9 benchmarks and test it on the remaining one. Doing so allows us to parallelize predicted loops of the benchmark under consideration and obtain performance numbers. Table \ref{tab:average_accuracy_loocv} shows LOOCV performance results averaged across all ML models. As Figure \ref{fig:accuracy_loocv_vs_kfold} shows, the accuracy of LOOCV method is lower than that of K-fold CV for any single chosen benchmark. That can be explained by the training set incompleteness (test benchmark loops are completely excluded) in the case of LOOCV and has little to do with the model itself. To some degree this experiment enforced LOOCV lower accuracy limits capabilities of our assistant and we would expect a better performance for a richer data set.
+Next, we train and test our models using a modified Leave-One-Out Cross-Validation (LOOCV). Instead of treating the entire set of loops from all benchmarks as a single data set, we now train our model on 9 benchmarks and test it on the remaining one. Doing so allows us to parallelize predicted loops of the benchmark under consideration and obtain performance numbers. Table \ref{tab:average_accuracy_loocv} shows LOOCV performance results averaged across all ML models. As Figure \ref{fig:accuracy_loocv_vs_kfold} shows, the accuracy of LOOCV method is lower than that of K-fold CV for any single chosen benchmark. That can be explained by the training set incompleteness (test benchmark loops are completely excluded) in the case of LOOCV and has little to do with the model itself. To some degree this experiment-enforced lower accuracy limits capabilities of our assistant and we would expect a better performance for a richer data set.
 
 %\quad While k-fold cross-validation method mixes loops from all 10 SNU NPB benchmarks and provides a good statistical assessment of predictive performance on the whole SNU NPB data set generally, in order to use our predictor with the proposed schemes we need to change our methodology. For that purpose we use modified Leave-One-Out cross-validation (LOOCV) technique. We train our model on 9 benchmarks and test it on the remaining one. Doing so allows us to actually parallelise all correctly predicted parallel loops and get performance numbers for the benchmark being tested.
 %\begin{comment}
@@ -951,11 +951,9 @@ Figure \ref{fig:icc_competition} shows the final distribution of all the cases a
 
 In this section we evaluate the effectiveness of our parallelization assistant. In particular, we are interested in the potential productivity gains delivered by our parallelization assistant and savings on human expert time.
 
-In our study we assume the human expert to start with sequential C implementations of the SNU NAS benchmarks. The goal is to parallelize these benchmark applications to a performance level of the existing parallel versions of the benchmarks. By using our parallelization assistant we expect the human expert to consider fewer loops than by following a profiling-based approach, i.e.\ considering loops in the order of decreasing contributions to overall program execution time. We also compare against the fully automated parallelization approach implemented in the ICC compiler.
+In our study we assume the human expert to start with sequential C implementations of the SNU NAS benchmarks. The goal is to parallelize these benchmark applications to a performance level of the existing parallel versions of the benchmarks. By using our parallelization assistant we expect the human expert to consider fewer loops than by using a profiling-based approach, i.e.\ considering loops in the order of decreasing contributions to overall program execution time. We also compare against the fully automated parallelization approach implemented in the ICC compiler. We notice that the Intel compiler not only fails to achieve noticeable speedups, but actually slows down the performance on most of the benchmarks. For BT benchmark the slowdown reaches 3.5 times. In contrast, the OpenMP reference implementation results in a (geo-)mean speedup of 2.19 across the benchmark suite.
 
-Our results are shown as performance convergence curves in Figure \ref{fig:performance_convergence_line}. For each benchmark we present the execution time (on the y-axis) as the number of analyzed and possibly parallelized loops (on the x-axis) increases. Execution time is bounded to the top by the original sequential execution time, and to the bottom by the time for the reference OpenMP implementation written by human experts.
-
-We notice that the Intel compiler not only fails to achieve noticeable speedups, but actually slows down the performance on most of the benchmarks. For BT benchmark the slowdown reaches 3.5 times. In contrast, the OpenMP reference implementation results in a (geo-)mean speedup of 2.19 across the benchmark suite. 
+Our results are shown as performance convergence curves in Figure \ref{fig:performance_convergence_line}. For each benchmark we present the execution time (on the y-axis) as the function of the growing number of analyzed and possibly parallelized loops (on the x-axis). Execution time is bounded to the top by the original sequential execution time, and to the bottom by the time for the reference OpenMP implementation written by human experts. In some cases (LU and UA) partial benchmark parallelisation might actually slow down the performance. In the case of LU we do not converge to the best achievable parallel version performance having parallelised just first 25 loops. There are a total of 40 OpenMP pragmas in the benchmark and we need to parallelize all these loops altogether in order to reach the best performance level.
 
 \begin{table*}[t]
   \begin{center}
@@ -1017,7 +1015,7 @@ The SUIF \cite{Wilson:1994:SIR:193209.193217} parallelizing compiler uses a simp
 Machine learning has been used to solve a wide range of problems, from the early successful work of selecting compiler flags for sequential programs, to recent works on scheduling and optimising parallel programs on heterogeneous multi-cores. Some works for machine learning in compilers look at how, or if, a compiler optimization should be applied to a sequential program. Some of the previous studies build supervised classifiers to predict the optimal loop unroll factor \cite{4907653,1402082} or to determine whether a function should be inlined \cite{Zhao2003ToIO,1559966}. These works target a fixed set of compiler options, by representing the optimization problem as a multi-class classification problem where each compiler option is a class. Evolutionary algorithms like generic search are often used to explore a large design space. Prior works~\cite{Almagor:2004:FEC:997163.997196,Cooper:2005:AAC:1065910.1065921,Ashouri:2017:MMC:3132652.3124452} have used evolutionary algorithms to solve the phase ordering problem (i.e.\ at which order a set of compiler transformations should be applied).
 
 \textit{Machine Learning and Parallelization.}
-Probably most relevant to the work presented in this paper is the approach of Fried \emph{et al.}~\cite{fried_ea:2013:icmla}. Similar to our approach, Fried \emph{et al.} train a supervised learning algorithm on code hand-annotated with OpenMP parallelization directives in order to approximate the parallelization that might be produced by a human expert. However, we do not rely solely on OpenMP annotations, but we complement our training data with substantially richer data obtained from an aggressively configured parallelizing compiler. While Fried \emph{et al.}~focus on the comparative performance of different ML algorithms, we contribute a practical parallelization assistant capable of ranking loop candidates in their order of merit. Through this we directly enhance programmer productivity in an ML-assisted environment.
+Probably the most relevant to the work presented in this paper is the approach of Fried \emph{et al.}~\cite{fried_ea:2013:icmla}. Similar to our approach, Fried \emph{et al.} train a supervised learning algorithm on code hand-annotated with OpenMP parallelization directives in order to approximate the parallelization that might be produced by a human expert. However, we do not rely solely on OpenMP annotations, but we complement our training set with substantially richer data obtained from an aggressively configured parallelizing compiler. While Fried \emph{et al.}~focus on the comparative performance of different ML algorithms, we contribute a practical parallelization assistant capable of ranking loop candidates in their order of merit. Through this we directly enhance programmer productivity in an ML-assisted environment.
 
 
 \section{Summary \& Conclusions}
