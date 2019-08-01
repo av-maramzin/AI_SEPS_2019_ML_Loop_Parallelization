@@ -2,19 +2,20 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm
+#from matplotlib import cm
 
 fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
 
 categories = [
     "missed opportunity", "false positive", "discovery", "icc shielding",
-    "correct 0", "correct 1"
+    "icc & predictor agreement"
 ]
 
-data = [2, 3, 8, 10, 22, 55]
+data = [3, 8, 10, 2, 77]
 
-cmap = plt.cm.Blues
-colors = cmap(np.linspace(0.2, 0.9, len(data)))
+#cmap = plt.cm.Blues
+#colors = cmap(np.linspace(0.2, 0.9, len(data)))
+colors = ['skyblue','red','green','lightgreen','lightblue']
 
 
 def func(pct, allvals):
@@ -24,7 +25,7 @@ def func(pct, allvals):
 
 wedges, texts, autotexts = ax.pie(
     data,
-    pctdistance=1.3,
+    pctdistance=1.1,
     autopct=lambda pct: func(pct, data),
     textprops=dict(color="black"),
     colors=colors,
@@ -35,8 +36,10 @@ ax.legend(
     wedges,
     categories,
     title="",
-    loc="center left",
-    bbox_to_anchor=(1, 1, 0, 1),
+    loc="lower center",
+    #bbox_to_anchor=(1, 1, 0, 1),
+    bbox_to_anchor=(0.5,-0.5),
+    ncol=3,
     prop={'size': 8})
 
 # ax.set_title("A pie")
