@@ -254,9 +254,9 @@ with traditional profiling to rank higher those loops with a high likelihood of 
 %
 An evaluation on eight programs from the SNU NAS benchmark suite shows that
 the program performance tends to improve faster as loops are parallelized in
-the ranking order suggested by our parallelization assistant compared to a traditional order based on profiling.
+the ranking order suggested by our parallelization assistant compared to a traditional order based on profiling only.
 %
-On average, following the order suggested by the assistant reduces the number of Lines Of Code (LOC) a programmer has to examine manually by approximately 20\% in order to completely parallelize SNU NPB to its expert-level speedup.
+On average, following the order suggested by the assistant reduces the number of lines of code a programmer has to examine manually by approximately 20\% in order to completely parallelize SNU NPB to its expert-level speedup.
 %
 Given the high level of effort involved in manual analysis, such a reduction
 can translate into substantial development cost savings.
@@ -272,17 +272,14 @@ can translate into substantial development cost savings.
 
 \subsection{Motivating Example}
 
-Consider the sequential C implementation of the \textit{Conjugate Gradient (CG)} benchmark from SNU NAS suite.
+Consider the sequential C implementation of the \textit{Conjugate Gradient (CG)}
+benchmark from the SNU NPB suite.
 %
 Table~\ref{tab:ranking} shows the top three CG loops as ranked by the Intel
 Profiler (based on their execution time) and by our parallelization
-assistant (additionally taking into account predicted loop parallelizability).
+assistant (additionally taking into account their parallelizability).
 %
 Both rankings include the same loops, but, crucially, the loops are \textbf{ranked in a different order}.
-%
-Among the three loops, only \texttt{cg.c:509} (marked in \textbf{bold} in the table) is
-parallelizable, while the other two loops (\texttt{cg.c:326} and
-\texttt{cg.c:484}) are not.
 
 \begin{table}
   \begin{minipage}{\columnwidth}
@@ -290,43 +287,49 @@ parallelizable, while the other two loops (\texttt{cg.c:326} and
     \begin{tabu}{c|c|cc}
       \hline
       \rowfont{\bfseries}
-      \multirow{2}{*}{Ranking} & Profiler & \multicolumn{2}{c}{Assistant} \\
+      \multirow{2}{*}{Ranking} & Profiler & \multicolumn{2}{c}{Assistant} \\ \cline{2-4}
       \rowfont{\bfseries}
       & loop & loop & parallelizability\\\hline
-      1 & \texttt{cg.c:326} & \textbf{\texttt{cg.c:509}} & 85\%\\
+      1 & \texttt{cg.c:326} & \textbf{\texttt{cg.c:509}} & \textbf{85\%}\\
       2 & \texttt{cg.c:484} & \texttt{cg.c:326} & 29\%\\
-      3 & \textbf{\texttt{cg.c:509}} & \texttt{cg.c:484} & 8\%\\
+      3 & \textbf{\texttt{cg.c:509}} & \texttt{cg.c:484} & 8\%\\\hline
     \end{tabu}
-    \caption{Profiler vs. Assistant rankings comparison of the top 3 longest running loops in the CG benchmark.}
+    \caption{Comparison of the profiler and assistant rankings for the top-three loops in the CG benchmark.}
     \label{tab:ranking}
   \end{center}
   \end{minipage}
 \end{table}%
 
-Following the profiler ranking as in traditional profile-guided parallelization
-(the second column in Table~\ref{tab:ranking}), the loops \texttt{cg.c:326} and
-\texttt{cg.c:484} are the first to be suggested for manual analysis.
-%
-However, their examination determines that they are not parallelizable, due to inter-iteration dependencies and side effects caused by system calls (see Listing~\ref{lst:main_iter}).
-%
-Finally, manual analysis of loop \texttt{cg.c:509} (see
-Listing~\ref{lst:reduction}) recognizes that it computes an array of reductions
-and thus it is parallelizable.
-%
-Parallelizing just this loop speeds up CG by a factor of 2.8, which is 80\% of
-the speedup obtained by an expert parallelizing the entire benchmark.
-
-In contrast, our parallelization assistant (two last columns in
-Table~\ref{tab:ranking}) predicts that loop \texttt{cg.c:509} is parallelizable
-(with a likelihood of 85\%) while loops \texttt{cg.c:326} and \texttt{cg.c:484} are not (likelihood of just 29\% and 8\%).
-%
-Consequently, it ranks the loop \texttt{cg.c:509} at the top, allowing the user to achieve the same program speedup without having to analyze loops \texttt{cg.c:326} and \texttt{cg.c:484}.
+Following the profiler ranking (second column in Table~\ref{tab:ranking}), a
+parallelization expert would concentrate on analyzing the loop \texttt{cg.c:326}
+first.
 %
 % Note: the 100 lines of code are counted using 'cloc code/cg-326.c'.
 %
-The manual effort savings are significant, considering that \texttt{cg.c:326} is an outermost loop consisting of 100+ lines of code (including its callee function
-\texttt{conj\_grad} where \texttt{cg.c:484} and \texttt{cg.c:509} are defined)
-whereas \texttt{cg.c:509} is a relatively small loop consisting of just the six lines shown in Listing~\ref{lst:reduction}.
+Analyzing this loop turns out to be costly (it consists of 100+ lines of code)
+and unfruitful (it is actually not parallelizable due to inter-iteration
+dependencies and side effects, see Listing~\ref{lst:main_iter}).
+%
+This analysis would be followed by an equally unfruitful analysis of
+loop \texttt{cg.c:484}.
+
+In contrast, our parallelization assistant (two last columns in
+Table~\ref{tab:ranking}) ranks the loop \textbf{\texttt{cg.c:509}} before
+loops \texttt{cg.c:326} and \texttt{cg.c:484}, as it finds that the former has a
+significantly higher probability of being parallelizable (see last column in
+Table~\ref{tab:ranking}).
+%
+Following the assistant's ranking, a parallelization expert would thus
+concentrate on analysing the loop \textbf{\texttt{cg.c:509}} first.
+%
+Analyzing this loop is inexpensive (it consists of only six lines of code, see
+Listing~\ref{lst:reduction}) and fruitful: its parallelization speeds up CG by a
+factor of~2.8, which is~80\% of the speedup obtained by parallelizing the entire
+benchmark.
+%
+Hence, following the ranking proposed by our assistant, a parallelization expert
+can achieve most of the available speedup in CG in a fraction of the time
+required by a traditional profile-guided parallelization process.
 
 \begin{figure}[t]
 \begin{lstlisting}[caption={\texttt{cg.c:326}. Longest running loop in CG. The loop cannot be parallelized due to
@@ -342,7 +345,7 @@ for (it = 1; it <= NITER; it++) {
 }
 \end{lstlisting}
 
-\begin{lstlisting}[caption={\texttt{cg.c:509}. Longest running loop in CG among those \emph{that can be parallelized}.},label={lst:reduction},language=C]
+\begin{lstlisting}[caption={\textbf{\texttt{cg.c:509}}. Longest running loop in CG among those \emph{that can be parallelized}.},label={lst:reduction},language=C]
 for (j = 0; j < lastrow-firstrow+1; j++) {
   suml = 0.0;
   for (k = rowstr[j]; k < rowstr[j+1]; k++)
@@ -356,14 +359,14 @@ for (j = 0; j < lastrow-firstrow+1; j++) {
 
 \subsection{Contributions}
 
-In this paper we are making the following contributions:
+In summary, this paper makes the following contributions:
 %
 \begin{itemize}
 \renewcommand\labelitemi{$\vartriangleright$}
 \renewcommand\labelitemii{$\bullet$}
-\item We develop and train a machine learning model, which can be used to predict the probability with which sequential C loops can be parallelized (Sections~\ref{predicting_parallel_loops} and~\ref{ml_predictive_performance}),
-\item we integrate profiling for hotspots with our novel ML model into a parallelization assistant, which guides the user through a ranked list of loops for parallelization (Section~\ref{practical_applications}), and
-\item we demonstrate that our tool and methodology increases programmer productivity by identifying parallel loop candidates better than existing state-of-the-art approaches (Section~\ref{evaluation}).
+\item We introduce a machine learning model, which can be used to predict the probability with which sequential C loops can be parallelized (Sections~\ref{predicting_parallel_loops} and~\ref{ml_predictive_performance});
+\item we integrate profiling of execution time with our novel ML model into a parallelization assistant, which guides the user through a ranked list of loops for parallelization (Section~\ref{practical_applications}); and
+\item we demonstrate that our tool and methodology increase programmer productivity by identifying parallel loop candidates better than existing state-of-the-art approaches (Section~\ref{evaluation}).
 
 %Designed an ML based model of loop parallelisability quantifying the latter %(Section~\ref{predicting_parallel_loops}) and ranking program loops
 %    \begin{itemize}
