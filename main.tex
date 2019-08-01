@@ -506,10 +506,10 @@ To avoid overfitting we discard irrelevant or redundant features. We run a pipel
       iter/payload non-cf cohesion & 18.5\\
       payload mem write fraction & 6.1\\
       loop absolute size & 5.7\\
-      critical payload getelemptr count & 5.3\\
-      payload mem dep num & 4.0\\
+      critical payload pointer access count & 5.3\\
+      payload memory dependence num & 4.0\\
       critical payload non-cf cohesion & 2.9\\
-      payload getelemptr fraction & 2.7\\
+      payload pointer access fraction & 2.7\\
       critical payload total cohesion & 2.6\\\hline
       \end{tabu}
   \end{center}
@@ -892,7 +892,7 @@ We have compared the generated rankings of our parallelization assistant against
     \begin{tabu}{M{0.5cm}M{1.2cm}M{2.0cm}M{3.5cm}}
       \hline
       \rowfont{\bfseries}
-      ICC Compiler & Predictor & True Parallel & Classification Bucket\\%\hline
+      ICC Compiler & Predictor & True Parallel & Classification\\%\hline
       \hline
       0 & 0 & 0 & correct 0 (no) prediction\\
       0 & 0 & 1 & missed opportunity\\
