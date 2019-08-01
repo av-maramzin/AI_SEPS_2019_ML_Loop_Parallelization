@@ -243,7 +243,7 @@ support vector machines allows the model to achieve a prediction accuracy higher
 %
 % Note: the "detected parallelism increase" is 945/995 - 812/995 = 0.1336683417.
 %
-The model improves over ICC across the sequential C version of the SNU NAS benchmark suite by detecting 13\% more parallel loops. Albeit this improvement comes at the cost of introducing \textit{false positives}, where non-parallelizable loops are misclassified as parallelizable. However, the false positive rate in our evaluation is as low as 6.5\%. We feel this is acceptable as our parallelization assistant does not automatically restructure code, but the final parallelization is in the hands of expert users.
+The model improves over the ICC Compiler across the sequential C version of the SNU NAS benchmark suite by detecting 13\% more parallel loops. Albeit this improvement comes at the cost of introducing \textit{false positives}, where non-parallelizable loops are misclassified as parallelizable. However, the false positive rate in our evaluation is as low as 6.5\%. We feel this is acceptable as our parallelization assistant does not automatically restructure code, but the final parallelization is in the hands of expert users.
 %\todo{(FIXME: taken from~Figure~\ref{fig:accuracy_loocv}, double-check these numbers)}
 
 % TODO: mention that we use standard techniques for feature extraction,
@@ -419,7 +419,13 @@ In summary, this paper makes the following contributions:
 % \subsection{Overview}
 % \label{ml_overview}
 
-We approach the prediction of parallel loops as a \textbf{supervised machine learning probabilistic classification problem}. Based on sequential reference applications and their manually parallelized counterparts as well as Intel's parallelizing C/C++ compiler we create a data set of parallelizable and non-parallelizable loops. We extract loop features and use the data set to train a machine learning model, which links feature vectors describing the loops with their observed parallelizability. We then use the trained model as a probabilistic predictor: for each new loop we determine its feature vector and then predict the probability of the loop being parallelizable \cite{Niculescu-Mizil:2005:PGP:1102351.1102430}. For naturally probabilistic models like trees we directly use computed classification probabilities (fraction of parallelizable training samples in the leaf node). For SVM classifier we use Platt scaling to derive the probabilities. In this chapter we conduct a common ML performance assessment done through accuracy, precision and recall scores. The latter gives us an additional degree of confidence in the predicted probabilities. Descriptions and definitions of machine learning techniques we use can be found in \cite{James:2014:ISL:2517747} and in the documentation of \textit{scikit-learn} library \cite{scikit-learn}. The latter is used in our work for all ML related tasks.
+We approach the prediction of parallel loops as a \textbf{supervised machine learning probabilistic classification
+problem}. Based on sequential reference applications and their manually parallelized counterparts as well as the ICC Compiler we create a data set of parallelizable and non-parallelizable loops. 
+We extract loop features and use the data set to train a machine learning model, which links feature vectors describing the loops with their observed parallelizability. 
+We then use the trained model as a probabilistic predictor: for each new loop we determine its feature vector and then predict the probability of the loop being parallelizable \cite{Niculescu-Mizil:2005:PGP:1102351.1102430}. 
+For naturally probabilistic models like trees we directly use computed classification probabilities (fraction of parallelizable training samples in the leaf node). 
+For SVM classifier we use Platt scaling to derive the probabilities. In this chapter we conduct a common ML performance assessment done through accuracy, precision and recall scores. 
+The latter gives us an additional degree of confidence in the predicted probabilities. Descriptions and definitions of machine learning techniques we use can be found in \cite{James:2014:ISL:2517747} and the documentation of \textit{scikit-learn} library \cite{scikit-learn}. The latter is used in our work for all ML related tasks.
 
 %\textit{create an ML based model of loop parallelisability and train it to classify loops of Seoul National University implementation \cite{snu-npb-benchmarks} of NAS Parallel Benchmarks \cite{nasa-parallel-benchmarks} as parallelizable or not.}\newline\null 
 %\quad We used facilities of \textit{scikit-learn} \cite{scikit-learn} Python library for all ML related tasks. To conduct various ML training/testing experiments in the search of the best ML model we developed a scripting framework taking an input data (train and test) along with an ML pipeline INI configuration file. Configuration file allows us for a flexible change in the settings of an experiment (ML model to use, its hyper-parameter search space, the exact automatic feature selection methods, etc.). The following sections give a detailed description of all ML pipeline stages.
@@ -602,7 +608,7 @@ Model hyper-parameter tuning process consists of several parts. First, we determ
 
 % \quad In order to train and test our ML model in a supervised way, we need to provide it with the "right answers" regarding loop parallelisability. The task of getting classification labels for loops of SNU NPB benchmarks is complicated by several factors.\newline\null
 
-For training our ML model we use a total of 1415 loops from the SNU NPB benchmark suite. Out of those loops, 210 have been annotated by (external) human experts with parallel OpenMP \textit{pragmas}. We use these annotations as labelled data to indicate parallelizable loops. However, the data is not complete. Human programmers strive to capture only coarse-grain parallelism and do not annotate every parallelizable loop. Hence, we augment the training data with the help of the ICC compiler, which finds additional parallelizable loops. We combine the results into our training set comprising a total 1415 loops, of which 995 are labelled as parallelizable.  We then use K-fold and Leave-One-Out Cross-Validation (LOOCV) methodologies to train and test our ML models.
+For training our ML model we use a total of 1415 loops from the SNU NPB benchmark suite. Out of those loops, 210 have been annotated by (external) human experts with parallel OpenMP \textit{pragmas}. We use these annotations as labelled data to indicate parallelizable loops. However, the data is not complete. Human programmers strive to capture only coarse-grain parallelism and do not annotate every parallelizable loop. Hence, we augment the training data with the help of the ICC Compiler, which finds additional parallelizable loops. We combine the results into our training set comprising a total 1415 loops, of which 995 are labelled as parallelizable.  We then use K-fold and Leave-One-Out Cross-Validation (LOOCV) methodologies to train and test our ML models.
 
 
 %and leave a lot of parallelisable loops (parallelisation of which deems unprofitable) unannotated. By using only these 210 "yes" labels, we are risking to mislead our ML model, since it uses only static program features reflecting dependence-based algorithmic parallelisability of program loops, which do not reflect the profitability of their parallelisation. Moreover, the data set is rather unbalanced (210 "yes" vs 1205 "no"). The latter sets the baseline predictive performance we are going to compete with to a very high level of 85\%. The work \cite{fried_ea:2013:icmla} suffers from this. And seems to incline to classify bigger loops as parallelisable. Given the parallel nature of big loops in SNU NPB, that results into high prediction accuracy, which might not hold for a different set of benchmarks.\newline\null
@@ -726,7 +732,9 @@ Table \ref{tab:average_accuracy_models} shows the overall predictive performance
   \label{tab:average_accuracy_models}
   \vspace{-5mm}
 \end{table}%
-The SVC model has the highest average accuracy and has successfully managed to recall 95.24\% of all parallel loops. ICC succeeds to parallelize 812 out of 995 parallelizable loops. Thus, on average SVC extends ICC parallelization capabilities to 948 loops. Despite relatively high precision of 91.06\%, that extension comes at the price of some misprediction errors. Figure \ref{fig:prediction_stats} shows that unsafe (false positive) mispredictions dominate at 65\% of those cases where misclassifications occur.
+The SVC model has the highest average accuracy and has successfully managed to recall 95.24\% of all parallel loops. The
+ICC Compiler succeeds to parallelize 812 out of 995 parallelizable loops. Thus, on average SVC extends the ICC
+Compiler's parallelization capabilities to 948 loops. Despite relatively high precision of 91.06\%, that extension comes at the price of some misprediction errors. Figure \ref{fig:prediction_stats} shows that unsafe (false positive) mispredictions dominate at 65\% of those cases where misclassifications occur.
 %Thus we need to devise a scheme, that will protect us and make these errors not that critical.
 \begin{figure}[ht]
 \includegraphics[width=0.5\textwidth]{figures/prediction_stats.pdf}
@@ -833,7 +841,8 @@ The intuition for using this function to combine the two metrics is that it prio
 \label{fig:ft_loop_ranking}
 \end{figure}
 
-If programmers attempt to parallelize loops in the order prescribed by their execution time, they will inevitably waste their time trying to parallelize loops which may be long-running, but offer little or no opportunity for extracting parallelism. Instead, by taking into account predicted parallelizability the new ranking directly guides the programmer to loops that significantly contribute to overall execution time \textbf{and} offer a realistic prospect of parallelization.
+If programmers attempt to parallelize loops in the order prescribed by their execution time, they will inevitably waste
+their efforts trying to parallelize loops which may be long-running, but offer little or no opportunity for extracting parallelism. Instead, by taking into account predicted parallelizability the new ranking directly guides the programmer to loops that significantly contribute to overall execution time \textbf{and} offer a realistic prospect of parallelization.
 
 %Top left and right pictures are identical and rank FT benchmark loops according to their running time score (given by the Intel Compiler). The problem with that order is that it ranks long-running program loops the highest independent of their parallelisability. If a programmer starts to parallelise application following that order, he is going to waste his time and efforts on the loops one cannot parallelise anyway. The left and right plots at the bottom of the figure demonstrate a transformation in the loop ranking our assistant does. Vertical axes of these plots correspond to the values our shifted sigmoid ranking function (see figure \ref{fig:sigmoid_3d}) takes. The bottom left plot shows how the relative height of the bars changes with a switch from a loop runtime to our scoring function. It is clear from the plot, that non-parallelisable loops go down in their importance. The bottom right picture shows that such a change actually moves true parallel loops toward the beginning of the list. The longer loop takes to run, the bigger the move. On the other hand non-parallelisable loops move towards the back of the list (almost independent of their running time). The improved ranking of FT loops allows a programmer to immediately start benchmark parallelisation with the most important loops and don't waste time looking at long-running loops, which cannot be parallelised by their nature anyway.
 \begin{comment}
@@ -846,14 +855,14 @@ If programmers attempt to parallelize loops in the order prescribed by their exe
 
 \subsection{Comparison to Static Analysis} 
 
-We have compared the generated rankings of our parallelization assistant with the Intel \cpp{} Compiler, which due to its use of static analysis is conservative and occasionally misses some parallelization opportunities.
+We have compared the generated rankings of our parallelization assistant against the ICC Compiler, which due to its use of static analysis is conservative and occasionally misses some parallelization opportunities.
 
 \begin{comment}
 \begin{table}[ht]
     \centering
     \begin{tabular}[c]{|p{1.0cm}|p{1.5cm}|p{1.5cm}|p{2cm}|}
         \hline
-        ICC & predictor & true parallel & classification bucket \\
+        ICC Compiler & predictor & true parallel & classification bucket \\
         \hline
         0 & 0 & 0 & correct 0 (no) prediction \\
         \hline
@@ -872,7 +881,7 @@ We have compared the generated rankings of our parallelization assistant with th
         1 & 1 & 1 & correct 1 (yes) prediction \\  
         \hline
     \end{tabular}
-    \caption{All the possible ICC competition scheme combinations}
+    \caption{All the possible ICC Compiler competition scheme combinations}
     \label{tab:combinations_table}
 \end{table}
 \end{comment}
@@ -883,7 +892,7 @@ We have compared the generated rankings of our parallelization assistant with th
     \begin{tabu}{M{0.5cm}M{1.2cm}M{2.0cm}M{3.5cm}}
       \hline
       \rowfont{\bfseries}
-      ICC & Predictor & True Parallel & Classification Bucket\\%\hline
+      ICC Compiler & Predictor & True Parallel & Classification Bucket\\%\hline
       \hline
       0 & 0 & 0 & correct 0 (no) prediction\\
       0 & 0 & 1 & missed opportunity\\
@@ -896,15 +905,22 @@ We have compared the generated rankings of our parallelization assistant with th
     \end{tabu}
   \end{center}
   \end{minipage}
-  \caption{Possible outcomes for the side-by-side setup of our ML predictor and Intel's parallelizing compiler.}
+  \caption{Possible outcomes for the side-by-side setup of our ML predictor and the ICC Compiler.}
   \label{tab:combinations_table}
 \end{table}%
 
-The ML approach to parallelization with a human expert responsible for final code transformation allows our parallelization assistant to be more aggressive than ICC. Hence, our model can predict more loops as parallelizable than ICC. The visible effect of this is that our assistant potentially assigns high probabilities to some possibly-parallel loops and awards them a relatively high rank, despite the fact that ICC is not capable of parallelizing them. In Table \ref{tab:combinations_table} these loops are classified under ``discovery".
+The ML approach to parallelization with a human expert responsible for final code transformation allows our
+parallelization assistant to be more aggressive than the ICC Compiler. In other words, our model can predict more loops as
+parallelizable. The visible effect of this is that our assistant potentially assigns high probabilities to some
+possibly-parallel loops and awards them a relatively high rank, despite the fact that the ICC Compiler is not capable of parallelizing them. In Table \ref{tab:combinations_table} these loops are classified under ``discovery".
 
-We have set up an experiment where we apply our ML predictor side-by-side with ICC.  Both aim at independently classifyings loops as parallelizable or not. There are a total of 6 possible classification outcomes our scheme might potentially produce summarized in Table \ref{tab:combinations_table}. The most interesting cases are those, where the ML predictor disagrees with ICC. We then manually inspected these cases and investigated the cause of conservatism in ICC. 
+We have set up an experiment where we apply our ML predictor side-by-side with the ICC Compiler.  Both aim at independently
+classifying loops as parallelizable or not. There is a total of 6 possible classification outcomes that our scheme can 
+produce (summarized in Table \ref{tab:combinations_table}). 
 
-A summary and breakdown by reason for ICC's failure to parallelize a loop can be found in Table \ref{tab:icc_missed_opportunities}.
+Some of the most interesting cases are those where the ML predictor and the ICC Compiler disagree. This led us to
+further investigate the reasons behind the conservativeness of the ICC Compiler. These results are summarized in Table \ref{tab:icc_missed_opportunities}.
+
 \begin{table}
   \tabulinesep=2pt
   \begin{minipage}{\columnwidth}
@@ -919,7 +935,7 @@ A summary and breakdown by reason for ICC's failure to parallelize a loop can be
     \end{tabu}
   \end{center}
   \end{minipage}
-  \caption{Classification of parallelizable loops rejected for parallelization by Intel's compiler.}
+  \caption{Classification of parallelizable loops rejected for parallelization by the ICC compiler.}
   \label{tab:icc_missed_opportunities}
   \vspace*{-5mm}
 \end{table}%
@@ -928,14 +944,15 @@ A summary and breakdown by reason for ICC's failure to parallelize a loop can be
 \label{evaluation_icc_competition}
 
 Next we evaluate the classification performance and misclassifications according to Table \ref{tab:combinations_table}. We repeatedly ran K-fold CV on the whole set of SNU NPB loops and sorted the outcomes into separate buckets.
-Figure \ref{fig:icc_competition} shows the final distribution of all the cases as percentages of the total number of bucket classifications. In most cases our parallelization assistant agrees with ICC and either classifies truly non-parallel loops as non-parallel or truly parallel loops as parallel. This is an expected result as we have used ICC (along with OpenMP annotated loops) to train our ML model. However, sometimes our parallelization assistant and ICC reached different conclusions. The results are shown in Figure \ref{fig:icc_competition}. As can be seen differences are mainly due to our parallelization assistant discovering parallelizable loops inaccessible to ICC, but also due to a proportion of false positives.
+Figure \ref{fig:icc_competition} shows the final distribution of all the cases as percentages of the total number of
+bucket classifications. In most cases our parallelization assistant agrees with the ICC Compiler and either classifies truly non-parallel loops as non-parallel or truly parallel loops as parallel. This is an expected result as we have used ICC (along with OpenMP annotated loops) to train our ML model. However, sometimes our parallelization assistant and ICC reached different conclusions. The results are shown in Figure \ref{fig:icc_competition}. As can be seen differences are mainly due to our parallelization assistant discovering parallelizable loops inaccessible to ICC, but also due to a proportion of false positives.
 
 \begin{figure}[t!]
     %\begin{minipage}{\columnwidth}
     \centering
     \includegraphics[trim=1mm 1mm 1mm 1mm,clip,width=0.9\columnwidth]{figures/icc_vs_predictor.pdf}
     \caption{
-      Distribution of loop classification by ICC and our predictor. While there is agreement in about 80\% of the cases, our tool more aggressively discovers genuine parallelism in 10\%, while allowing false positives in 8\% of the inspected loops.}
+      Distribution of loop classification by the ICC Compiler and our predictor. While there is agreement in about 80\% of the cases, our tool more aggressively discovers genuine parallelism in 10\%, while allowing false positives in 8\% of the inspected loops.}
     \label{fig:icc_competition}
 %\end{minipage}
 \vspace*{-5mm}
@@ -954,7 +971,12 @@ Figure \ref{fig:icc_competition} shows the final distribution of all the cases a
 
 In this section we evaluate the effectiveness of our parallelization assistant. In particular, we are interested in the potential productivity gains delivered by our parallelization assistant and savings on human expert time.
 
-In our study we assume the human expert to start with sequential C implementations of the SNU NAS benchmarks. The goal is to parallelize these benchmark applications to a performance level of the existing parallel versions of the benchmarks. By using our parallelization assistant we expect the human expert to consider fewer loops than by using a profiling-based approach, i.e.\ considering loops in the order of decreasing contributions to overall program execution time. We also compare against the fully automated parallelization approach implemented in the ICC compiler. We notice that the Intel compiler not only fails to achieve noticeable speedups, but actually slows down the performance on most of the benchmarks. For BT benchmark the slowdown reaches 3.5 times. In contrast, the OpenMP reference implementation results in a (geo-)mean speedup of 2.19 across the benchmark suite.
+In our study we assume that the human expert starts with sequential version of the SNU NAS benchmarks. The goal
+is to parallelize these applications to a matching performance level of their existing parallel versions. 
+By using our parallelization assistant we expect the human expert to consider fewer loops than by using a
+profiling-based approach, i.e.\ considering loops in the order of decreasing contributions to overall program execution
+time. We also compare against the fully automated parallelization approach implemented in the ICC compiler. We notice
+that the ICC Compiler not only fails to achieve noticeable speedups, but actually slows down the performance on most of the benchmarks. For BT benchmark the slowdown reaches 3.5 times. In contrast, the OpenMP reference implementation results in a (geo-)mean speedup of 2.19 across the benchmark suite.
 
 Our results are shown as performance convergence curves in Figure \ref{fig:performance_convergence_line}. For each benchmark we present the execution time (on the y-axis) as the function of the growing number of analyzed and possibly parallelized loops (on the x-axis). Execution time is bounded to the top by the original sequential execution time, and to the bottom by the time for the reference OpenMP implementation written by human experts. In some cases (LU and UA) partial benchmark parallelisation might actually slow down the performance. In the case of LU we do not converge to the best achievable parallel version performance having parallelised just first 25 loops. There are a total of 40 OpenMP pragmas in the benchmark and we need to parallelize all these loops altogether in order to reach the best performance level.
 
